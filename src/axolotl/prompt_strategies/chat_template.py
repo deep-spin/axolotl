@@ -207,24 +207,11 @@ class ChatTemplateStrategy(PromptTokenizingStrategy):
 
     def tokenize_prompt(self, prompt):
         turns = prompt[self.messages]
-    
-        # Filter out turns with empty messages
-        valid_turns = [turn for turn in turns if turn.get(self.prompter.message_field_content)]
-        
-        if not valid_turns:
-            # If all turns are empty, return None or a default value
-            return None
-        
-        input_ids = self.prompter.build_prompt(valid_turns)
-        
-        if input_ids is None:
-            # If build_prompt returns None (which it does when it detects an empty message), return None or a default value
-            return None
-    
+        input_ids = self.prompter.build_prompt(turns)
         labels = [IGNORE_TOKEN_ID] * len(input_ids)
 
         last_eos_idx = -1
-        for index, turn in enumerate(valid_turns):
+        for index, turn in enumerate(turns):
             role = turn.get(self.prompter.message_field_role)
             content = turn.get(self.prompter.message_field_content)
             train_turn = turn.get(self.prompter.message_field_training)
@@ -368,13 +355,22 @@ def load(tokenizer, cfg, ds_cfg: Optional[Dict[str, Any]] = None):
         ),
         "roles": ds_cfg.get("roles"),
         "drop_system_message": ds_cfg.get("drop_system_message", False),
+<<<<<<< HEAD
+=======
+        # we need to add one for detecting sequences with exceeding the `sequence_len` limit.
+        "max_length": cfg.sequence_len + 1,
+>>>>>>> upstream/main
     }
 
     strategy_params = {
         "train_on_inputs": cfg.train_on_inputs,
         "sequence_len": cfg.sequence_len,
         "roles_to_train": ds_cfg.get("roles_to_train", ["gpt", "assistant"]),
+<<<<<<< HEAD
         "train_on_eos": ds_cfg.get("train_on_eos", "last"),
+=======
+        "train_on_eos": ds_cfg.get("train_on_eos", "turn"),
+>>>>>>> upstream/main
     }
 
     strategy = ChatTemplateStrategy(

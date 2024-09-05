@@ -189,6 +189,8 @@ class ChatTemplate(str, Enum):
     cohere = "cohere"  # pylint: disable=invalid-name
     llama3 = "llama3"  # pylint: disable=invalid-name
     phi_3 = "phi_3"  # pylint: disable=invalid-name
+    deepseek_v2 = "deepseek_v2"  # pylint: disable=invalid-name
+    jamba = "jamba"  # pylint: disable=invalid-name
 
 
 class LoftQConfig(BaseModel):
@@ -320,6 +322,8 @@ class ModelInputConfig(BaseModel):
     )
     trust_remote_code: Optional[bool] = None
 
+    model_kwargs: Optional[Dict[str, Any]] = None
+
     @field_validator("trust_remote_code")
     @classmethod
     def hint_trust_remote_code(cls, trust_remote_code):
@@ -351,6 +355,8 @@ class HyperparametersConfig(BaseModel):
         },
     )
 
+    auto_find_batch_size: Optional[bool] = None
+
     train_on_inputs: Optional[bool] = False
     group_by_length: Optional[bool] = None
 
@@ -378,7 +384,7 @@ class HyperparametersConfig(BaseModel):
         },
     )
     torchdistx_path: Optional[str] = None
-    lr_scheduler: Optional[SchedulerType] = "cosine"
+    lr_scheduler: Optional[Union[SchedulerType, Literal["one_cycle"]]] = "cosine"
     lr_scheduler_kwargs: Optional[Dict[str, Any]] = None
     lr_quadratic_warmup: Optional[bool] = None
     cosine_min_lr_ratio: Optional[float] = None
@@ -588,6 +594,7 @@ class AxolotlInputConfig(
     eval_sample_packing: Optional[bool] = None
     pad_to_sequence_len: Optional[bool] = None
     curriculum_sampling: Optional[bool] = None
+    multipack_real_batches: Optional[bool] = None
 
     # for PoSE context length extension
     use_pose: Optional[bool] = None
@@ -613,6 +620,8 @@ class AxolotlInputConfig(
     flash_attn_fuse_mlp: Optional[bool] = None
     flash_optimum: Optional[bool] = None
 
+    eager_attention: Optional[bool] = None
+
     unsloth_cross_entropy_loss: Optional[bool] = None
     unsloth_lora_mlp: Optional[bool] = None
     unsloth_lora_qkv: Optional[bool] = None
@@ -623,6 +632,9 @@ class AxolotlInputConfig(
     deepspeed: Optional[Union[str, Dict[str, Any]]] = None
     fsdp: Optional[List[str]] = None
     fsdp_config: Optional[Dict[str, Any]] = None
+    fsdp_final_state_dict_type: Optional[
+        Literal["FULL_STATE_DICT", "LOCAL_STATE_DICT", "SHARDED_STATE_DICT"]
+    ] = None
 
     val_set_size: Optional[float] = Field(default=0.0)
 
@@ -1145,6 +1157,20 @@ class AxolotlInputConfig(
 
     @model_validator(mode="before")
     @classmethod
+    def check_fsdp_sharded_state_dict_w_safetensors(cls, data):
+        if (
+            data.get("fsdp")
+            and data.get("save_safetensors")
+            and data.get("fsdp_config")
+            and data["fsdp_config"].get("fsdp_state_dict_type") == "SHARDED_STATE_DICT"
+        ):
+            raise ValueError(
+                "FSDP SHARDED_STATE_DICT not compatible with save_safetensors"
+            )
+        return data
+
+    @model_validator(mode="before")
+    @classmethod
     def check_causal_lm_evals(cls, data):
         if data.get("do_causal_lm_eval") and data.get("eval_sample_packing"):
             raise ValueError(
@@ -1259,6 +1285,19 @@ class AxolotlConfigWCapabilities(AxolotlInputConfig):
                 "sample_packing & torch sdpa with bf16 is unsupported may results in 0.0 loss. "
                 "This may work on H100s."
             )
+
+        return data
+
+    @model_validator(mode="before")
+    @classmethod
+    def check_hopper_8bit_lora(cls, data):
+        is_sm_90: bool = (
+            data["capabilities"]
+            and data["capabilities"].get("compute_capability") == "sm_90"
+        )
+        if data.get("adapter") and data.get("load_in_8bit") and is_sm_90:
+            # see https://github.com/bitsandbytes-foundation/bitsandbytes/issues/538#issuecomment-2262945464
+            raise ValueError("8-bit LoRA is not supported on Hopper GPUs")
 
         return data
 

@@ -1,5 +1,9 @@
 # Axolotl
 
+![tests](https://github.com/axolotl-ai-cloud/axolotl/actions/workflows/tests.yml/badge.svg)
+![tests-nightly](https://github.com/axolotl-ai-cloud/axolotl/actions/workflows/tests-nightly.yml/badge.svg)
+![multigpu-semi-weekly tests](https://github.com/axolotl-ai-cloud/axolotl/actions/workflows/multi-gpu-e2e.yml/badge.svg)
+
 Axolotl is a tool designed to streamline the fine-tuning of various AI models, offering support for multiple configurations and architectures.
 
 Features:
@@ -7,7 +11,7 @@ Features:
 - Supports fullfinetune, lora, qlora, relora, and gptq
 - Customize configurations using a simple yaml file or CLI overwrite
 - Load different dataset formats, use custom formats, or bring your own tokenized datasets
-- Integrated with xformer, flash attention, rope scaling, and multipacking
+- Integrated with xformer, flash attention, [liger kernel](https://github.com/linkedin/Liger-Kernel), rope scaling, and multipacking
 - Works with single GPU or multiple GPUs via FSDP or Deepspeed
 - Easily run with Docker locally or on the cloud
 - Log results and optionally checkpoints to wandb or mlflow
@@ -22,38 +26,50 @@ Features:
 <td>
 
 ## Table of Contents
-- [Introduction](#axolotl)
-- [Supported Features](#axolotl-supports)
-- [Quickstart](#quickstart-)
-- [Environment](#environment)
-  - [Docker](#docker)
-  - [Conda/Pip venv](#condapip-venv)
-  - [Cloud GPU](#cloud-gpu) - Latitude.sh, JarvisLabs, RunPod
-  - [Bare Metal Cloud GPU](#bare-metal-cloud-gpu)
-  - [Windows](#windows)
-  - [Mac](#mac)
-  - [Google Colab](#google-colab)
-  - [Launching on public clouds via SkyPilot](#launching-on-public-clouds-via-skypilot)
-  - [Launching on public clouds via dstack](#launching-on-public-clouds-via-dstack)
-- [Dataset](#dataset)
-- [Config](#config)
-  - [Train](#train)
-  - [Inference](#inference-playground)
-  - [Merge LORA to Base](#merge-lora-to-base)
-  - [Special Tokens](#special-tokens)
-  - [All Config Options](#all-config-options)
-- Advanced Topics
-  - [Multipack](./docs/multipack.qmd)<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17 13.5v6H5v-12h6m3-3h6v6m0-6-9 9" class="icon_svg-stroke" stroke="#666" stroke-width="1.5" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-  - [RLHF & DPO](./docs/rlhf.qmd)<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17 13.5v6H5v-12h6m3-3h6v6m0-6-9 9" class="icon_svg-stroke" stroke="#666" stroke-width="1.5" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-  - [Dataset Pre-Processing](./docs/dataset_preprocessing.qmd)<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17 13.5v6H5v-12h6m3-3h6v6m0-6-9 9" class="icon_svg-stroke" stroke="#666" stroke-width="1.5" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-- [Common Errors](#common-errors-)
-  - [Tokenization Mismatch b/w Training & Inference](#tokenization-mismatch-bw-inference--training)
-- [Debugging Axolotl](#debugging-axolotl)
-- [Need Help?](#need-help-)
-- [Badge](#badge-)
-- [Community Showcase](#community-showcase)
-- [Contributing](#contributing-)
-- [Sponsors](#sponsors-)
+- [Axolotl](#axolotl)
+  - [Table of Contents](#table-of-contents)
+  - [Axolotl supports](#axolotl-supports)
+  - [Quickstart ⚡](#quickstart-)
+    - [Usage](#usage)
+  - [Advanced Setup](#advanced-setup)
+    - [Environment](#environment)
+      - [Docker](#docker)
+      - [Conda/Pip venv](#condapip-venv)
+      - [Cloud GPU](#cloud-gpu)
+      - [Bare Metal Cloud GPU](#bare-metal-cloud-gpu)
+        - [LambdaLabs](#lambdalabs)
+        - [GCP](#gcp)
+      - [Windows](#windows)
+      - [Mac](#mac)
+      - [Google Colab](#google-colab)
+      - [Launching on public clouds via SkyPilot](#launching-on-public-clouds-via-skypilot)
+      - [Launching on public clouds via dstack](#launching-on-public-clouds-via-dstack)
+    - [Dataset](#dataset)
+    - [Config](#config)
+      - [All Config Options](#all-config-options)
+    - [Train](#train)
+      - [Preprocess dataset](#preprocess-dataset)
+      - [Multi-GPU](#multi-gpu)
+        - [DeepSpeed](#deepspeed)
+        - [FSDP](#fsdp)
+        - [FSDP + QLoRA](#fsdp--qlora)
+        - [Weights \& Biases Logging](#weights--biases-logging)
+        - [Special Tokens](#special-tokens)
+      - [Liger Kernel](#liger-kernel)
+    - [Inference Playground](#inference-playground)
+    - [Merge LORA to base](#merge-lora-to-base)
+  - [Common Errors 🧰](#common-errors-)
+    - [Tokenization Mismatch b/w Inference \& Training](#tokenization-mismatch-bw-inference--training)
+  - [Debugging Axolotl](#debugging-axolotl)
+  - [Need help? 🙋](#need-help-)
+  - [Badge ❤🏷️](#badge-️)
+  - [Community Showcase](#community-showcase)
+  - [Contributing 🤝](#contributing-)
+  - [Sponsors 🤝❤](#sponsors-)
+      - [💎 Diamond Sponsors - Contact directly](#-diamond-sponsors---contact-directly)
+      - [🥇 Gold Sponsors - $5000/mo](#-gold-sponsors---5000mo)
+      - [🥈 Silver Sponsors - $1000/mo](#-silver-sponsors---1000mo)
+      - [🥉 Bronze Sponsors - $500/mo](#-bronze-sponsors---500mo)
 
 </td>
 <td>
@@ -67,8 +83,8 @@ Features:
     <p>
       Go ahead and Axolotl questions!!
     </p>
-    <img src="https://github.com/OpenAccess-AI-Collective/axolotl/actions/workflows/pre-commit.yml/badge.svg?branch=main" alt="pre-commit">
-    <img alt="PyTest Status" src="https://github.com/OpenAccess-AI-Collective/axolotl/actions/workflows/tests.yml/badge.svg?branch=main">
+    <img src="https://github.com/axolotl-ai-cloud/axolotl/actions/workflows/pre-commit.yml/badge.svg?branch=main" alt="pre-commit">
+    <img alt="PyTest Status" src="https://github.com/axolotl-ai-cloud/axolotl/actions/workflows/tests.yml/badge.svg?branch=main">
   </div>
 </div>
 
@@ -95,6 +111,7 @@ Features:
 | RWKV        | ✅         | ❓    | ❓     | ❓             | ❓                 | ❓          | ❓            |
 | Qwen        | ✅         | ✅    | ✅     | ❓             | ❓                 | ❓          | ❓            |
 | Gemma       | ✅         | ✅    | ✅     | ❓             | ❓                 | ✅          | ❓            |
+| Jamba       | ✅         | ✅    | ✅     | ❓             | ❓                 | ✅          | ❓            |
 
 ✅: supported
 ❌: not supported
@@ -107,7 +124,7 @@ Get started with Axolotl in just a few steps! This quickstart guide will walk yo
 **Requirements**: Python >=3.10 and Pytorch >=2.1.1.
 
 ```bash
-git clone https://github.com/OpenAccess-AI-Collective/axolotl
+git clone https://github.com/axolotl-ai-cloud/axolotl
 cd axolotl
 
 pip3 install packaging ninja
@@ -132,7 +149,7 @@ accelerate launch -m axolotl.cli.inference examples/openllama-3b/lora.yml \
 
 # remote yaml files - the yaml config can be hosted on a public URL
 # Note: the yaml config must directly link to the **raw** yaml
-accelerate launch -m axolotl.cli.train https://raw.githubusercontent.com/OpenAccess-AI-Collective/axolotl/main/examples/openllama-3b/lora.yml
+accelerate launch -m axolotl.cli.train https://raw.githubusercontent.com/axolotl-ai-cloud/axolotl/main/examples/openllama-3b/lora.yml
 ```
 
 ## Advanced Setup
@@ -339,7 +356,7 @@ For further and fine-grained use cases, please refer to the official [dstack doc
 
 Axolotl supports a variety of dataset formats.  It is recommended to use a JSONL.  The schema of the JSONL depends upon the task and the prompt template you wish to use.  Instead of a JSONL, you can also use a HuggingFace dataset with columns for each JSONL field.
 
-See [these docs](https://openaccess-ai-collective.github.io/axolotl/docs/dataset-formats/) for more information on how to use different dataset formats.
+See [the documentation](https://axolotl-ai-cloud.github.io/axolotl/docs/dataset-formats/) for more information on how to use different dataset formats.
 
 ### Config
 
@@ -525,6 +542,25 @@ tokens: # these are delimiters
 
 When you include these tokens in your axolotl config, axolotl adds these tokens to the tokenizer's vocabulary.
 
+##### Liger Kernel
+
+Liger Kernel: Efficient Triton Kernels for LLM Training
+
+https://github.com/linkedin/Liger-Kernel
+
+Liger (LinkedIn GPU Efficient Runtime) Kernel is a collection of Triton kernels designed specifically for LLM training.
+It can effectively increase multi-GPU training throughput by 20% and reduces memory usage by 60%. The Liger Kernel
+composes well and is compatible with both FSDP and Deepspeed.
+
+```yaml
+plugins:
+  - axolotl.integrations.liger.LigerPlugin
+liger_rope: true
+liger_rms_norm: true
+liger_swiglu: true
+liger_fused_linear_cross_entropy: true
+```
+
 ### Inference Playground
 
 Axolotl allows you to load your model in an interactive terminal playground for quick experimentation.
@@ -637,10 +673,10 @@ Need dedicated support? Please contact us at [✉️wing@openaccessaicollective.
 Building something cool with Axolotl? Consider adding a badge to your model card.
 
 ```markdown
-[<img src="https://raw.githubusercontent.com/OpenAccess-AI-Collective/axolotl/main/image/axolotl-badge-web.png" alt="Built with Axolotl" width="200" height="32"/>](https://github.com/OpenAccess-AI-Collective/axolotl)
+[<img src="https://raw.githubusercontent.com/axolotl-ai-cloud/axolotl/main/image/axolotl-badge-web.png" alt="Built with Axolotl" width="200" height="32"/>](https://github.com/axolotl-ai-cloud/axolotl)
 ```
 
-[<img src="https://raw.githubusercontent.com/OpenAccess-AI-Collective/axolotl/main/image/axolotl-badge-web.png" alt="Built with Axolotl" width="200" height="32"/>](https://github.com/OpenAccess-AI-Collective/axolotl)
+[<img src="https://raw.githubusercontent.com/axolotl-ai-cloud/axolotl/main/image/axolotl-badge-web.png" alt="Built with Axolotl" width="200" height="32"/>](https://github.com/axolotl-ai-cloud/axolotl)
 
 ## Community Showcase
 
@@ -658,7 +694,7 @@ PocketDoc Labs
 
 Please read the [contributing guide](./.github/CONTRIBUTING.md)
 
-Bugs? Please check the [open issues](https://github.com/OpenAccess-AI-Collective/axolotl/issues/bug) else create a new Issue.
+Bugs? Please check the [open issues](https://github.com/axolotl-ai-cloud/axolotl/issues/bug) else create a new Issue.
 
 PRs are **greatly welcome**!
 
@@ -676,7 +712,7 @@ pre-commit run --all-files
 
 Thanks to all of our contributors to date. Help drive open source AI progress forward by contributing to Axolotl.
 
-<a href="https://github.com/openaccess-ai-collective/axolotl/graphs/contributors">
+<a href="https://github.com/axolotl-ai-cloud/axolotl/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=openaccess-ai-collective/axolotl" alt="contributor chart by https://contrib.rocks"/>
 </a>
 

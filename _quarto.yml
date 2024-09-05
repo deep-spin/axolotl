@@ -14,7 +14,7 @@ website:
     - icon: twitter
       href: https://twitter.com/axolotl_ai
     - icon: github
-      href: https://github.com/OpenAccess-AI-Collective/axolotl/
+      href: https://github.com/axolotl-ai-cloud/axolotl/
     - icon: discord
       href: https://discord.gg/7m9sfhzaf3
 
@@ -36,6 +36,8 @@ website:
             - docs/nccl.qmd
             - docs/mac.qmd
             - docs/multi-node.qmd
+            - docs/unsloth.qmd
+            - docs/amd_hpc.qmd
         - section: "Dataset Formats"
           contents: docs/dataset-formats/*
         - section: "Reference"
