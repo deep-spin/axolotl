@@ -184,19 +184,11 @@ def process_datasets_for_packing(cfg, train_dataset, eval_dataset):
         min_sequence_len=cfg.min_sample_len or 2,
     )
 
-<<<<<<< HEAD
-        if cfg.model_config_type == "mamba":
-            LOG.info("dropping attention_mask column")
-            train_dataset = train_dataset.remove_columns("attention_mask")
-            if eval_dataset:
-                eval_dataset = eval_dataset.remove_columns("attention_mask")
-=======
     if cfg.is_preprocess:
         min_input_len = np.min(get_dataset_lengths(train_dataset))
         LOG.debug(f"min_input_len: {min_input_len}", main_process_only=True)
         max_input_len = np.max(get_dataset_lengths(train_dataset))
         LOG.debug(f"max_input_len: {max_input_len}", main_process_only=True)
->>>>>>> upstream/main
 
     if cfg.model_config_type == "mamba":
         LOG.info("dropping attention_mask column")
@@ -416,9 +408,6 @@ def calculate_total_num_steps(cfg, train_dataset, update=True):
     return total_num_steps
 
 
-<<<<<<< HEAD
-def setup_deepspeed_env(cfg, stage=None):
-=======
 def setup_torch_compile_env(cfg):
     if cfg.torch_compile:
         if not cfg.torch_compile_backend:
@@ -430,17 +419,13 @@ def setup_torch_compile_env(cfg):
 def setup_deepspeed_env(cfg, stage=None):
     from transformers.integrations.deepspeed import HfTrainerDeepSpeedConfig
 
->>>>>>> upstream/main
     os.environ["ACCELERATE_USE_DEEPSPEED"] = "true"
     os.environ["ACCELERATE_DEEPSPEED_CONFIG_FILE"] = cfg.deepspeed
     if stage:
         os.environ["ACCELERATE_DEEPSPEED_ZERO_STAGE"] = str(stage)
         if stage == 3:
             os.environ["ACCELERATE_DEEPSPEED_ZERO3_INIT"] = "true"
-<<<<<<< HEAD
-=======
     HfTrainerDeepSpeedConfig(cfg.deepspeed)
->>>>>>> upstream/main
 
 
 def setup_fsdp_envs(cfg):
@@ -477,11 +462,8 @@ def prepare_optim_env(cfg):
                 deepspeed_config = json.load(fin)
             stage = deepspeed_config.get("zero_optimization", {}).get("stage", None)
         setup_deepspeed_env(cfg, stage=stage)
-<<<<<<< HEAD
-=======
 
     setup_torch_compile_env(cfg)
->>>>>>> upstream/main
 
     if (cfg.bf16 == "auto" and is_torch_bf16_gpu_available()) or cfg.bf16 is True:
         os.environ["ACCELERATE_MIXED_PRECISION"] = "bf16"

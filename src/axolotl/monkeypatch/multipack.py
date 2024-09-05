@@ -26,20 +26,12 @@ SUPPORTED_MULTIPACK_MODEL_TYPES = [
 ]
 
 
-<<<<<<< HEAD
-def patch_for_multipack(model_type, model_name=None):
-=======
 def patch_for_multipack(model_type, model_name=None, is_remote_code=False):
->>>>>>> upstream/main
     if model_type == "gemmoe":
         patch_remote(model_name, ".configuration_gemmoe", ".modeling_gemmoe")
     elif model_type == "deepseek_v2":
         patch_remote(model_name, ".configuration_deepseek", ".modeling_deepseek")
-<<<<<<< HEAD
-    elif hasattr(transformers, "modeling_flash_attention_utils"):
-=======
     elif hasattr(transformers, "modeling_flash_attention_utils") and not is_remote_code:
->>>>>>> upstream/main
         transformers.modeling_flash_attention_utils._get_unpad_data = (  # pylint: disable=protected-access
             get_unpad_data
         )

@@ -360,15 +360,11 @@ def load_model(
         and cfg.flash_attention
         and cfg.sample_packing
     ):
-<<<<<<< HEAD
-        patch_for_multipack(cfg.model_config_type, model_name=cfg.base_model)
-=======
         patch_for_multipack(
             cfg.model_config_type,
             model_name=cfg.base_model,
             is_remote_code=cfg.trust_remote_code,
         )
->>>>>>> upstream/main
 
         if cfg.is_llama_derived_model:
             from axolotl.monkeypatch.llama_attn_hijack_flash import (
@@ -822,20 +818,13 @@ def load_model(
         )
 
         if cfg.model_config_type in MOE_ARCH_BLOCK:
-<<<<<<< HEAD
-=======
             moe_blocks = MOE_ARCH_BLOCK[cfg.model_config_type]
             moe_blocks = [moe_blocks] if isinstance(moe_blocks, str) else moe_blocks
->>>>>>> upstream/main
             set_z3_leaf_modules(
                 model,
                 [
                     get_module_class_from_name(model, module_name)
-<<<<<<< HEAD
-                    for module_name in MOE_ARCH_BLOCK[cfg.model_config_type]
-=======
                     for module_name in moe_blocks
->>>>>>> upstream/main
                 ],
             )
 

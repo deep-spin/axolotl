@@ -8,7 +8,7 @@ load_in_4bit: false
 strict: false
 #Unbabel/TowerBlocks-v1-MT-only
 datasets:
-  - path: Unbabel/Tower-v1-2106
+  - path: Unbabel/TowerBlocks-v2.0-wo-empty
     type: chat_template
     conversation: gemma
 
@@ -80,3 +80,10 @@ special_tokens:
   # bos_token: "<s>"
   eos_token: "<end_of_turn>"
   # unk_token: "<unk>"
+
+plugins:
+  - axolotl.integrations.liger.LigerPlugin
+liger_rope: true
+liger_rms_norm: true
+liger_swiglu: true
+liger_fused_linear_cross_entropy: true
